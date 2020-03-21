@@ -78,10 +78,7 @@ impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Option<T> {
     fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
         match self {
             None => None,
-            Some(x) => match f(*x) {
-                None => None,
-                Some(xx) => Some(xx),
-            }
+            Some(x) => f(*x)
         }
     }
 }
