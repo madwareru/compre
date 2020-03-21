@@ -51,3 +51,56 @@ monadic comprehesions for rustlang
         tripples
     );
 ```
+# There's are more!
+You aren't limited to iterators. Anything that implements traits `Parametrized`, `Functor`, `FilteredFunctor`(it's optional -- you should impl this in case you want a filtering feature), `Monad`, can be used with this macros.
+
+An example impl:
+```rust
+    impl<T: Sized+Copy> Parametrized<T> for Option<T>{}
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Functor<T, O> for Option<T> {
+        type UnderlyingO = Option<O>;
+        fn map<F: Fn(T) -> O>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => Some(f(*x)),
+            }
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Monad<T, O> for Option<T> {
+        fn flat_map<F: Fn(T) -> Self::UnderlyingO>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => f(*x),
+            }
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Option<T> {
+        fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => match f(*x) {
+                    None => None,
+                    Some(xx) => Some(xx),
+                }
+            }
+        }
+    }
+```
+How it looks in action then:
+```rust
+    let res = monadde! {
+        Some(2)  => a |>
+        Some(10) => b |>
+        Some(1)  => c |>
+        a * b + c
+    };
+    assert_eq!(Some(21), res);
+
+    let res = monadde! {
+        Some(2)        => a |>
+        None::<i32>    => b |>
+        Some(1)        => c |>
+        a * b + c
+    };
+    assert_eq!(None, res);
+```
