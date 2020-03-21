@@ -13,78 +13,10 @@ pub trait FilteredFunctor<T: Sized+Copy, O: Sized+Copy+Default> : Functor<T, O> 
     fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO;
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum Maybe<T: Sized+Copy> {
-    Nothing,
-    Just(T)
-}
-
-impl<T: Sized+Copy> Parametrized<T> for Maybe<T>{}
-impl<T: Sized+Copy, O: Sized+Copy+Default> Functor<T, O> for Maybe<T> {
-    type UnderlyingO = Maybe<O>;
-    fn map<F: Fn(T) -> O>(&self, f: F) -> Self::UnderlyingO {
-        match self {
-            Maybe::Nothing => Maybe::Nothing,
-            Maybe::Just(x) => Maybe::Just(f(*x)),
-        }
-    }
-}
-impl<T: Sized+Copy, O: Sized+Copy+Default> Monad<T, O> for Maybe<T> {
-    fn flat_map<F: Fn(T) -> Self::UnderlyingO>(&self, f: F) -> Self::UnderlyingO {
-        match self {
-            Maybe::Nothing => Maybe::Nothing,
-            Maybe::Just(x) => f(*x),
-        }
-    }
-}
-impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Maybe<T> {
-    fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
-        match self {
-            Maybe::Nothing => Maybe::Nothing,
-            Maybe::Just(x) => match f(*x) {
-                None => Maybe::Nothing,
-                Some(xx) => Maybe::Just(xx),
-            }
-        }
-    }
-}
-
-impl<T: Sized+Copy> Parametrized<T> for Vec<T> {}
-impl<T: Sized+Copy, O: Sized+Copy+Default> Functor<T, O> for Vec<T> {
-    type UnderlyingO = Vec<O>;
-    fn map<F: Fn(T) -> O>(&self, f: F) -> Self::UnderlyingO {
-        let mut out_vec = Vec::with_capacity(self.capacity());
-        for &item in self.iter() {
-            out_vec.push(f(item));
-        }
-        out_vec
-    }
-}
-impl<T: Sized+Copy, O: Sized+Copy+Default> Monad<T, O> for Vec<T> {
-    fn flat_map<F: Fn(T) -> Self::UnderlyingO>(&self, f: F) -> Self::UnderlyingO {
-        let mut out_vec = Vec::with_capacity(self.capacity());
-        for &item in self.iter() {
-            let mut foo_result = f(item);
-            out_vec.append(&mut foo_result);
-        }
-        out_vec
-    }
-}
-impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Vec<T> {
-    fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
-        let mut out_vec = Vec::with_capacity(self.capacity());
-        for &item in self.iter() {
-            match f(item) {
-                None => {},
-                Some(x) => out_vec.push(x),
-            }
-        }
-        out_vec
-    }
-}
-
+#[macro_export]
 define_monadde_macro!();
 
+#[macro_export]
 macro_rules! compre {
     ($ex:expr; $($id:ident <- $monad:expr),+) => {
         monadde! {
@@ -100,6 +32,7 @@ macro_rules! compre {
     }
 }
 
+#[macro_export]
 macro_rules! hx_do {
     ($($id:ident <- $monad:expr),+; $ex:expr) => {
         monadde! {
@@ -117,8 +50,71 @@ macro_rules! hx_do {
 
 #[cfg(test)]
 mod test{
-    use crate::{Monad, Functor};
-    use crate::Maybe::{Nothing, Just};
+    use crate::{Monad, Functor, FilteredFunctor, Parametrized};
+
+    impl<T: Sized+Copy> Parametrized<T> for Option<T>{}
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Functor<T, O> for Option<T> {
+        type UnderlyingO = Option<O>;
+        fn map<F: Fn(T) -> O>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => Some(f(*x)),
+            }
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Monad<T, O> for Option<T> {
+        fn flat_map<F: Fn(T) -> Self::UnderlyingO>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => f(*x),
+            }
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Option<T> {
+        fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
+            match self {
+                None => None,
+                Some(x) => match f(*x) {
+                    None => None,
+                    Some(xx) => Some(xx),
+                }
+            }
+        }
+    }
+
+    impl<T: Sized+Copy> Parametrized<T> for Vec<T> {}
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Functor<T, O> for Vec<T> {
+        type UnderlyingO = Vec<O>;
+        fn map<F: Fn(T) -> O>(&self, f: F) -> Self::UnderlyingO {
+            let mut out_vec = Vec::with_capacity(self.capacity());
+            for &item in self.iter() {
+                out_vec.push(f(item));
+            }
+            out_vec
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> Monad<T, O> for Vec<T> {
+        fn flat_map<F: Fn(T) -> Self::UnderlyingO>(&self, f: F) -> Self::UnderlyingO {
+            let mut out_vec = Vec::with_capacity(self.capacity());
+            for &item in self.iter() {
+                let mut foo_result = f(item);
+                out_vec.append(&mut foo_result);
+            }
+            out_vec
+        }
+    }
+    impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Vec<T> {
+        fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
+            let mut out_vec = Vec::with_capacity(self.capacity());
+            for &item in self.iter() {
+                match f(item) {
+                    None => {},
+                    Some(x) => out_vec.push(x),
+                }
+            }
+            out_vec
+        }
+    }
 
     #[test]
     fn test_simple() {
@@ -172,71 +168,21 @@ mod test{
     }
 
     #[test]
-    fn test_maybe() {
-        let some_product =
-            (1..=3).collect::<Vec<i32>>().flat_map(|a|
-                (2..=3).collect::<Vec<i32>>().map(|b|
-                    (a, b)));
-
-        assert_eq!(vec![(1, 2), (1, 3), (2, 2), (2, 3), (3, 2), (3, 3)], some_product);
-
-        let some_product = compre!{
-            (a, b);
-            a <- (1..=3).collect::<Vec<i32>>(),
-            b <- (2..=3).collect::<Vec<i32>>()
-        };
-
-        assert_eq!(vec![(1, 2), (1, 3), (2, 2), (2, 3), (3, 2), (3, 3)], some_product);
-
-        let some_product = compre! {
-            (a, b);
-            a <- (1..=3),
-            b <- (2..=3)
-        }.collect::<Vec<_>>();
-
-        assert_eq!(vec![(1, 2), (1, 3), (2, 2), (2, 3), (3, 2), (3, 3)], some_product);
-
-        let ololo = monadde! {
-            Just(2)        => a |>
-            Nothing::<i32> => b |>
-            Just(1)        => c |>
+    fn test_options() {
+        let res = monadde! {
+            Some(2)  => a |>
+            Some(10) => b |>
+            Some(1)  => c |>
             a * b + c
         };
-        assert_eq!(Nothing, ololo);
+        assert_eq!(Some(21), res);
 
-        let ololo = compre! {
-            a * b + c;
-            a <- Just(2),
-            b <- Nothing::<i32>,
-            c <- Just(1)
+        let res = monadde! {
+            Some(2)        => a |>
+            None::<i32>    => b |>
+            Some(1)        => c |>
+            a * b + c
         };
-        assert_eq!(Nothing, ololo);
-
-        let some_product2 =
-            (1..=3).collect::<Vec<i32>>().flat_map(|a|
-                (2..=3).collect::<Vec<i32>>().map(|b|
-                    a * b));
-
-        assert_eq!(vec![2, 3, 4, 6, 6, 9], some_product2);
-
-        let x = Just(5).flat_map(|a|
-            Just(10).map(|b|
-                a + b));
-        assert_eq!(Just(15), x);
-
-        let x = Just(5).flat_map(|a|
-            Nothing.map(|b: i32|
-                a + b));
-        assert_eq!(Nothing, x);
-
-        let x = Nothing.flat_map(|a: i32|
-            Just(10).map(|b|
-                a + b));
-        assert_eq!(Nothing, x);
-
-        let x = Nothing.flat_map(|a: i32|
-            Nothing.map(|b: i32|
-                a + b));
-        assert_eq!(Nothing, x);
+        assert_eq!(None, res);
     }
 }
