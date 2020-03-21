@@ -13,7 +13,6 @@ pub trait FilteredFunctor<T: Sized+Copy, O: Sized+Copy+Default> : Functor<T, O> 
     fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO;
 }
 
-#[macro_export]
 define_monadde_macro!();
 
 #[macro_export]
