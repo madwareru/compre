@@ -1,6 +1,6 @@
 ![Rust](https://github.com/madwareru/compre/workflows/Rust/badge.svg?branch=master)
 # compre
-monadic comprehesions for rustlang
+monadic comprehensions for rustlang
 
 # usage
 ```rust
