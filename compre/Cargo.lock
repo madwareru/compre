@@ -10,4 +10,4 @@ dependencies = [
 [[package]]
 name = "proc_monadde_macro"
 version = "0.1.4"
-source = "git+https://github.com/madwareru/proc_monadde_macro#57e9a312641559a2450909aa83fc96c4a2334d0c"
+source = "git+https://github.com/madwareru/proc_monadde_macro#58ca8ac33d6bcfca06b93b976f3664f6ca66509a"
