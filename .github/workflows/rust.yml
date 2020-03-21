@@ -13,8 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Chdir
-      run: cd ./compre/compre
     - name: List current directory
       run: ls
     - name: Build
