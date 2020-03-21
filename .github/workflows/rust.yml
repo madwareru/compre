@@ -16,6 +16,6 @@ jobs:
     - name: List current directory
       run: ls
     - name: Build
-      run: cargo build --verbose
+      run: cd compre && cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cd compre && cargo test --verbose
