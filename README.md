@@ -78,10 +78,7 @@ impl<T: Sized+Copy, O: Sized+Copy+Default> FilteredFunctor<T, O> for Option<T> {
     fn filter_map<F: Fn(T) -> Option<O>>(&self, f: F) -> Self::UnderlyingO {
         match self {
             None => None,
-            Some(x) => match f(*x) {
-                None => None,
-                Some(xx) => Some(xx),
-            }
+            Some(x) => f(*x)
         }
     }
 }
@@ -96,10 +93,10 @@ let res = monadde! {
 };
 assert_eq!(Some(21), res);
 
-let res = monadde! {
-    Some(2)        => a |>
-    None::<i32>    => b |>
-    Some(1)        => c |>
+let res = hx_do! {
+    a <- Some(2),
+    b <- None::<i32>,
+    c <- Some(1);
     a * b + c
 };
 assert_eq!(None, res);
